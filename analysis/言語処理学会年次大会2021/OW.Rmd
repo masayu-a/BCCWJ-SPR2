@@ -55,36 +55,3 @@ log_model_trim = lmer(SPR_log_reading_time~SPR_sentence_ID+SPR_bunsetsu_ID+SPR_w
 summary(log_model_trim)
 ```
 
-## ベイズ主義的モデリング
-
-### ライブラリ読み込み
-```{r reading_stan_library, eval=FALSE}
-library(rstan)
-rstan_options(auto_write=TRUE)
-options(mc.cores=parallel::detectCores())
-```
-```{r setwd, eval=FALSE}
-setwd("/Users/masayu-a/Desktop/2021-01-15-SPR/")
-```
-### ベイズ分析
-
-```{r stanDat, eval=FALSE}
-stanDat <- list(time=d$SPR_reading_time,
-	sentid=d$SPR_sentence_ID,
-	bid=d$SPR_bunsetsu_ID,
-	length=d$SPR_word_length,
-	dependent=d$DepPara_depnum,
-	subjid=d$SPR_subj_ID,
-	N = nrow(d),
-	N_subj=length(unique(d$SPR_subj_ID)))
-```
-
-```{r stan, eval=FALSE}
-model.fit <- stan(file="07OW.stan", data = stanDat, iter = 1000, chain = 3, warmup= 100)
-save(model.fit,file="model-OW.obj")
-```
-
-```{r shinystan, eval=FALSE}
-library(shinystan)
-launch_shinystan(model.fit)
-```

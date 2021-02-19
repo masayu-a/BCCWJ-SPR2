@@ -1,0 +1,69 @@
+---
+title: "BCCWJ-SPR PB 試行実験"
+author: "Masayuki Asahara"
+date: "2021/02/19"
+output:
+  html_document:
+    toc: true
+    toc_float: true    
+---
+
+# 準備
+## ファイル読み込み
+```{r reading_file}
+d = read.table("PB-masked_style.txt",sep="\t",header=TRUE,fileEncoding="UTF-8")
+d$SPR_subj_ID_factor = as.factor(d$SPR_subj_ID)
+d$SPR_log_reading_time = log(d$SPR_reading_time)
+head(d)
+summary(d)
+```
+
+## 頻度主義的モデリング
+### ライブラリ読み込み
+```{r reading_library, echo=FALSE}
+library(lme4)
+library(stargazer)
+```
+# BCCWJ_style_senmon+BCCWJ_style_koudo+BCCWJ_style_kudake+BCCWJ_style_katarikake
+# BCCWJ_style_kyakkan
+
+### 全体のデータを使ってモデリング（読み時間）：
+```{r model_all}
+model_all = lmer(SPR_reading_time~SPR_sentence_ID+SPR_bunsetsu_ID+SPR_word_length+DepPara_depnum+SPR_trial+BCCWJ_style_senmon+BCCWJ_style_koudo+BCCWJ_style_kudake+BCCWJ_style_katarikake+(1|SPR_subj_ID_factor)+(1|BCCWJ_Sample_ID),data=d,REML=FALSE)
+summary(model_all)
+stargazer(model_all)
+stargazer(model_all,type="text")
+save(model_all,file="PB_model_style.obj")
+```
+3SD より外側を削除してモデリング（読み時間）：
+```{r model_trim_3sd}
+d_trim = d[scale(resid(model_all)) < 3.0 , ]
+nrow(d) - nrow(d_trim)
+(nrow(d) - nrow(d_trim)) / nrow(d)
+model_trim = lmer(SPR_reading_time~SPR_sentence_ID+SPR_bunsetsu_ID+SPR_word_length+DepPara_depnum+SPR_trial+BCCWJ_style_senmon+BCCWJ_style_koudo+BCCWJ_style_kudake+BCCWJ_style_katarikake+(1|SPR_subj_ID_factor)+(1|BCCWJ_Sample_ID),data=d,REML=FALSE)
+summary(model_trim)
+stargazer(model_trim)
+stargazer(model_trim,type="text")
+save(model_trim,file="PB_model_style_trim.obj")
+```
+
+### 全体のデータを使ってモデリング（対数読み時間）：
+```{r log_model_all, eval=FALSE}
+log_model_all = lmer(SPR_log_reading_time~SPR_sentence_ID+SPR_bunsetsu_ID+SPR_word_length+DepPara_depnum+SPR_trial+BCCWJ_style_senmon+BCCWJ_style_koudo+BCCWJ_style_kudake+BCCWJ_style_katarikake+(1|SPR_subj_ID_factor)+(1|BCCWJ_Sample_ID),data=d,REML=FALSE)
+summary(log_model_all)
+stargazer(log_model_all,type="text")
+stargazer(log_model_all)
+save(log_model_all,file="PB_log_model_style.obj")
+```
+3SD より外側を削除してモデリング（対数読み時間）：
+```{r log_model_trim_3sd, eval=FALSE}
+d_trim_log = d[scale(resid(log_model_all)) < 3.0 , ]
+nrow(d) - nrow(d_trim_log)
+(nrow(d) - nrow(d_trim_log)) / nrow(d)
+log_model_trim = lmer(SPR_log_reading_time~SPR_sentence_ID+SPR_bunsetsu_ID+SPR_word_length+DepPara_depnum+SPR_trial+BCCWJ_style_senmon+BCCWJ_style_koudo+BCCWJ_style_kudake+BCCWJ_style_katarikake+(1|SPR_subj_ID_factor)+(1|BCCWJ_Sample_ID),data=d_trim_log,REML=FALSE)
+summary(log_model_trim)
+stargazer(log_model_trim,type="text")
+stargazer(log_model_trim)
+save(log_model_trim,file="PB_log_model_style_trim.obj")
+```
+
